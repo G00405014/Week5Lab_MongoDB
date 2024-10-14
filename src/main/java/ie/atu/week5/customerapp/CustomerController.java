@@ -1,7 +1,6 @@
 package ie.atu.week5.customerapp;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,20 +11,22 @@ import java.util.Optional;
 @RequestMapping("/customers")
 public class CustomerController {
 
-    private final CustomerRepository customerRepository;
+    private final CustomerService customerService; // Inject CustomerService
 
-    public CustomerController(CustomerRepository customerRepository) {
-        this.customerRepository = customerRepository;
+    public CustomerController(CustomerService customerService) {
+        this.customerService = customerService;
     }
 
+    // Delegate to CustomerService to fetch all customers
     @GetMapping
     public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
+        return customerService.getAllCustomers();
     }
 
+    // Delegate to CustomerService to fetch a customer by ID
     @GetMapping("/{id}")
     public ResponseEntity<Customer> getCustomerById(@PathVariable String id) {
-        Optional<Customer> customer = customerRepository.findById(id);
+        Optional<Customer> customer = customerService.getCustomerById(id);
         if (customer.isPresent()) {
             return ResponseEntity.ok(customer.get());
         } else {
@@ -33,18 +34,21 @@ public class CustomerController {
         }
     }
 
+    // Delegate to CustomerService to create a customer
     @PostMapping
     public ResponseEntity<Customer> createCustomer(@Valid @RequestBody Customer customer) {
-        Customer savedCustomer = customerRepository.save(customer);
+        Customer savedCustomer = customerService.createCustomer(customer);
         return ResponseEntity.ok(savedCustomer);
     }
 
+    // Delegate to CustomerService to delete a customer by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable String id) {
-        if (customerRepository.existsById(id)) {
-            customerRepository.deleteById(id);
+        boolean isDeleted = customerService.deleteCustomerById(id);
+        if (isDeleted) {
             return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
     }
 }
